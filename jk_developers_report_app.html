@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Staff Duty Report - JK Developers</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Load Chart.js for Statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Custom scrollbar for textareas */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Smooth tab transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glassmorphism for taskbar */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Input styling enhancements */
+        input[type="date"], input[type="time"], input[type="number"], input[type="text"], select, textarea {
+            transition: all 0.2s ease-in-out;
+        }
+        input:focus, select:focus, textarea:focus {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 font-sans text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 sm:top-auto sm:bottom-24 sm:right-6 sm:left-auto sm:-translate-x-0 bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl transform transition-all duration-400 -translate-y-full sm:translate-y-full opacity-0 z-50 flex items-center gap-3 min-w-[300px]">
+        <span id="toast-icon-container" class="shrink-0 text-emerald-400"><i data-lucide="check-circle" class="w-6 h-6"></i></span>
+        <span id="toast-message" class="font-medium text-sm">Report submitted successfully!</span>
+    </div>
+
+    <div class="max-w-4xl mx-auto sm:mt-8 sm:px-6 lg:px-8">
+        <div class="bg-white sm:rounded-2xl shadow-sm sm:shadow-xl overflow-hidden relative z-10 border-b sm:border border-slate-200">
+            
+            <!-- Modern Gradient Header -->
+            <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 px-6 py-8 sm:px-10 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl"></div>
+                <div class="absolute bottom-0 right-1/4 w-24 h-24 rounded-full bg-indigo-400 opacity-20 blur-xl"></div>
+                <div class="flex items-center gap-4 relative z-10">
+                    <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+                        <i data-lucide="building-2" class="w-8 h-8 shrink-0 text-indigo-50"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">JK Developers</h1>
+                        <p class="text-indigo-100 text-xs sm:text-sm mt-1 font-medium opacity-90">Daily Staff Duty Report</p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="dutyForm" class="p-5 sm:p-10 block fade-in">
+                
+                <!-- Section 1: Basic Details (Tightly Packed Grid) -->
+                <div class="bg-slate-50/50 p-5 rounded-xl border border-slate-100 mb-8">
+                    <div class="flex flex-col gap-5">
+                        <!-- Row 1: Date & Team -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 mr-1.5 text-indigo-500"></i> Date
+                                </label>
+                                <input type="date" id="date" name="date" required class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 shadow-sm" />
+                            </div>
+                            <div>
+                                <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                                    <i data-lucide="users" class="w-3.5 h-3.5 mr-1.5 text-indigo-500"></i> Team
+                                </label>
+                                <select id="teamSelect" name="team" required class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 shadow-sm appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Select team</option>
+                                    <option value="Pedda Durgaiah Team">Pedda Durgaiah</option>
+                                    <option value="Madhu Team">Madhu</option>
+                                    <option value="Praveen Raj Team">Praveen Raj</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Employee Name & Designation -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                                    <i data-lucide="user" class="w-3.5 h-3.5 mr-1.5 text-indigo-500"></i> Name
+                                </label>
+                                <select id="employeeSelect" name="employeeName" required disabled class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-medium disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-sm appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Select team first</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
+                                    <i data-lucide="briefcase" class="w-3.5 h-3.5 mr-1.5 text-indigo-500"></i> Role
+                                </label>
+                                <input type="text" id="designationInput" name="designation" placeholder="Auto-filled" readonly required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed outline-none text-sm font-medium shadow-inner" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <div class="p-1.5 bg-indigo-100 text-indigo-600 rounded-md"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                        Attendance Tracking
+                    </h4>
+                    
+                    <!-- Hidden input to store the actual attendance status for the form submission -->
+                    <input type="hidden" id="attendanceStatusInput" name="attendanceStatus" value="Present" />
+                    
+                    <div class="grid grid-cols-4 gap-2 sm:gap-4 mb-4" id="attendanceChips">
+                        <button type="button" data-status="Present" class="attendance-btn w-full py-2.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold text-xs sm:text-sm transition-all shadow-sm">Present</button>
+                        <button type="button" data-status="Half-Day" class="attendance-btn w-full py-2.5 rounded-lg border-2 border-slate-200 bg-white text-slate-600 hover:border-amber-300 hover:bg-amber-50 font-bold text-xs sm:text-sm transition-all shadow-sm">Half-Day</button>
+                        <button type="button" data-status="Leave" class="attendance-btn w-full py-2.5 rounded-lg border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50 font-bold text-xs sm:text-sm transition-all shadow-sm">Leave</button>
+                        <button type="button" data-status="Absent" class="attendance-btn w-full py-2.5 rounded-lg border-2 border-slate-200 bg-white text-slate-600 hover:border-rose-300 hover:bg-rose-50 font-bold text-xs sm:text-sm transition-all shadow-sm">Absent</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Check-in</label>
+                            <input type="time" id="checkInTime" name="checkInTime" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-500 text-sm font-medium shadow-sm transition-all disabled:opacity-50" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Check-out</label>
+                            <input type="time" id="checkOutTime" name="checkOutTime" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none focus:border-indigo-500 text-sm font-medium shadow-sm transition-all disabled:opacity-50" />
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="mb-8 border-slate-100" />
+
+                <h3 class="text-lg font-bold text-slate-800 mb-5">Shift Updates</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+                    <div class="group">
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Morning</label>
+                        <textarea name="morningUpdate" placeholder="Tasks completed..." rows="3" class="w-full px-4 py-3 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm shadow-sm transition-all"></textarea>
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Afternoon</label>
+                        <textarea name="afternoonUpdate" placeholder="Tasks completed..." rows="3" class="w-full px-4 py-3 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm shadow-sm transition-all"></textarea>
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Evening</label>
+                        <textarea name="eveningUpdate" placeholder="Tasks completed..." rows="3" class="w-full px-4 py-3 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm shadow-sm transition-all"></textarea>
+                    </div>
+                </div>
+
+                <hr class="mb-8 border-slate-100" />
+
+                <h3 class="text-lg font-bold text-slate-800 mb-5">Daily Metrics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-10">
+                    <div class="relative bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-700 mb-3">
+                            <span class="flex items-center"><i data-lucide="phone" class="w-4 h-4 mr-1.5 text-blue-500"></i> Followed</span>
+                            <span id="targetCallsDisplay" class="hidden text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full animate-pulse">Min: 0</span>
+                        </label>
+                        <input type="number" name="callsFollowed" value="0" min="0" class="w-full text-center text-xl sm:text-2xl font-black text-slate-800 border-none outline-none focus:ring-0 p-0 bg-transparent" />
+                    </div>
+                    <div class="relative bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-700 mb-3">
+                            <i data-lucide="phone-call" class="w-4 h-4 mr-1.5 text-emerald-500"></i> Interested
+                        </label>
+                        <input type="number" name="callsInterested" value="0" min="0" class="w-full text-center text-xl sm:text-2xl font-black text-slate-800 border-none outline-none focus:ring-0 p-0 bg-transparent" />
+                    </div>
+                    <div class="relative bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-700 mb-3">
+                            <i data-lucide="phone-forwarded" class="w-4 h-4 mr-1.5 text-purple-500"></i> Collected
+                        </label>
+                        <input type="number" name="callsCollected" value="0" min="0" class="w-full text-center text-xl sm:text-2xl font-black text-slate-800 border-none outline-none focus:ring-0 p-0 bg-transparent" />
+                    </div>
+                    <div class="relative bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <label class="flex items-center text-xs sm:text-sm font-semibold text-slate-700 mb-3">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-1.5 text-rose-500"></i> Visits
+                        </label>
+                        <input type="number" name="visits" value="0" min="0" class="w-full text-center text-xl sm:text-2xl font-black text-slate-800 border-none outline-none focus:ring-0 p-0 bg-transparent" />
+                    </div>
+                </div>
+
+                <hr class="mb-8 border-slate-100" />
+
+                <h3 class="text-lg font-bold text-slate-800 mb-5">Location Tracking</h3>
+                <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100 mb-10">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        <button type="button" id="getLocationBtn" class="flex items-center justify-center sm:w-auto gap-2 bg-white border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 hover:shadow-md font-bold py-2.5 px-5 rounded-xl transition-all">
+                            <i data-lucide="navigation" class="w-4 h-4"></i>
+                            <span id="locationBtnText">Capture Location</span>
+                        </button>
+                        
+                        <div class="flex-1 grid grid-cols-2 gap-3">
+                            <input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly class="w-full px-3 py-2 border border-indigo-100 rounded-lg bg-white/50 text-slate-500 outline-none text-xs sm:text-sm shadow-sm" />
+                            <input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly class="w-full px-3 py-2 border border-indigo-100 rounded-lg bg-white/50 text-slate-500 outline-none text-xs sm:text-sm shadow-sm" />
+                        </div>
+                    </div>
+                    <div class="mt-4 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="map" class="w-4 h-4 text-indigo-300"></i>
+                        </div>
+                        <input type="text" id="areaName" name="areaName" placeholder="Area details will populate here..." readonly class="w-full pl-9 pr-4 py-2.5 border border-indigo-100 rounded-lg bg-white/80 text-slate-600 outline-none text-sm font-medium shadow-sm" />
+                    </div>
+                    <p id="locationError" class="text-rose-500 text-xs font-semibold mt-2 hidden"></p>
+                </div>
+
+                <hr class="mb-8 border-slate-100" />
+
+                <div class="mb-8">
+                    <label class="flex items-center text-sm font-bold text-slate-700 mb-3">
+                        <i data-lucide="message-square" class="w-4 h-4 mr-2 text-indigo-500"></i> Remarks
+                    </label>
+                    <textarea name="remarks" placeholder="Add any notes, feedback, or challenges here..." rows="4" class="w-full px-4 py-3 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm shadow-sm transition-all"></textarea>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5">
+                        <i data-lucide="send" class="w-5 h-5"></i> Submit Report
+                    </button>
+                </div>
+            </form>
+
+            <div id="viewReportsSection" class="p-5 sm:p-10 hidden fade-in">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-800">Historical Reports</h2>
+                    <div class="flex w-full sm:w-auto items-center gap-3 bg-slate-100 p-2 rounded-xl border border-slate-200">
+                        <input type="date" id="viewDateFilter" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg outline-none text-sm font-medium w-full sm:w-auto" />
+                        <button id="fetchReportsBtn" class="bg-slate-800 hover:bg-slate-900 text-white p-2 rounded-lg transition-colors shadow-sm">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="reportsContainer" class="space-y-4">
+                    <!-- Empty State -->
+                    <div class="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                            <i data-lucide="folder-search" class="w-8 h-8 text-slate-300"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-600">No Reports Selected</h3>
+                        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Select a date above and click search to view team submissions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statsSection" class="p-5 sm:p-10 hidden fade-in">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-6">Team Dashboard</h2>
+                
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                    <div class="flex-1 relative">
+                        <label class="absolute -top-2 left-3 bg-indigo-50/0 px-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wide">Start</label>
+                        <input type="date" id="statsStartDate" class="w-full px-4 py-2.5 bg-white border border-indigo-200 rounded-xl outline-none text-sm font-medium shadow-sm" />
+                    </div>
+                    <div class="flex-1 relative">
+                        <label class="absolute -top-2 left-3 bg-indigo-50/0 px-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wide">End</label>
+                        <input type="date" id="statsEndDate" class="w-full px-4 py-2.5 bg-white border border-indigo-200 rounded-xl outline-none text-sm font-medium shadow-sm" />
+                    </div>
+                    <button id="generateStatsBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md shadow-indigo-200 flex justify-center items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Generate
+                    </button>
+                </div>
+
+                <div id="statsContent" class="hidden">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-colors">
+                            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity"><i data-lucide="phone" class="w-24 h-24 text-blue-600"></i></div>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Followed</p>
+                            <p id="statFollowed" class="text-3xl font-black text-slate-800">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-colors">
+                            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity"><i data-lucide="phone-call" class="w-24 h-24 text-emerald-600"></i></div>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Interested</p>
+                            <p id="statInterested" class="text-3xl font-black text-slate-800">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-purple-300 transition-colors">
+                            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity"><i data-lucide="phone-forwarded" class="w-24 h-24 text-purple-600"></i></div>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Collected</p>
+                            <p id="statCollected" class="text-3xl font-black text-slate-800">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-colors">
+                            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity"><i data-lucide="map-pin" class="w-24 h-24 text-rose-600"></i></div>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Visits</p>
+                            <p id="statVisits" class="text-3xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts Area -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-indigo-500"></i> Performance Breakdown</h4>
+                            <div class="h-56"><canvas id="callsChart"></canvas></div>
+                        </div>
+                        <div class="bg-white p-5 border border-slate-200 rounded-2xl shadow-sm">
+                            <h4 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-indigo-500"></i> Attendance Overview</h4>
+                            <div class="h-56 flex justify-center"><canvas id="attendanceChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statsEmpty" class="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mt-4">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                        <i data-lucide="pie-chart" class="w-8 h-8 text-slate-300"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-600">No Data Generated</h3>
+                    <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">Select a date range and click generate to visualize team performance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4 pt-2 pointer-events-none">
+        <div class="max-w-sm mx-auto pointer-events-auto">
+            <nav class="glass-nav rounded-2xl sm:rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 flex justify-evenly items-center px-2 py-2">
+                <button type="button" id="tab-submit" class="flex flex-col items-center justify-center w-20 py-2 rounded-xl text-indigo-600 bg-indigo-50 scale-105 transition-all duration-300 relative">
+                    <i data-lucide="file-edit" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wider">Submit</span>
+                </button>
+                <button type="button" id="tab-view" class="flex flex-col items-center justify-center w-20 py-2 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-50/80 transition-all duration-300 relative">
+                    <i data-lucide="history" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wider">History</span>
+                </button>
+                <button type="button" id="tab-stats" class="flex flex-col items-center justify-center w-20 py-2 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-50/80 transition-all duration-300 relative">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wider">Stats</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener("load", () => {
+            // 1. Initialize Icons Safely
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            // === TABS NAVIGATION LOGIC ===
+            const tabSubmit = document.getElementById('tab-submit');
+            const tabView = document.getElementById('tab-view');
+            const tabStats = document.getElementById('tab-stats');
+            const formSection = document.getElementById('dutyForm');
+            const viewReportsSection = document.getElementById('viewReportsSection');
+            const statsSection = document.getElementById('statsSection');
+
+            function switchTab(activeTab, activeSection) {
+                const allTabs = [tabSubmit, tabView, tabStats];
+                const allSections = [formSection, viewReportsSection, statsSection];
+
+                // Style Tabs
+                allTabs.forEach(tab => {
+                    if (tab === activeTab) {
+                        tab.classList.remove('text-slate-400', 'hover:bg-slate-50/80');
+                        tab.classList.add('text-indigo-600', 'bg-indigo-50', 'scale-105');
+                    } else {
+                        tab.classList.remove('text-indigo-600', 'bg-indigo-50', 'scale-105');
+                        tab.classList.add('text-slate-400', 'hover:bg-slate-50/80');
+                    }
+                });
+
+                // Toggle Sections
+                allSections.forEach(sec => {
+                    if (sec === activeSection) {
+                        sec.classList.remove('hidden');
+                        // re-trigger fade animation
+                        sec.classList.remove('fade-in');
+                        void sec.offsetWidth; // Trigger reflow
+                        sec.classList.add('fade-in');
+                    } else {
+                        sec.classList.add('hidden');
+                    }
+                });
+            }
+
+            tabSubmit.addEventListener('click', () => switchTab(tabSubmit, formSection));
+            tabView.addEventListener('click', () => switchTab(tabView, viewReportsSection));
+            tabStats.addEventListener('click', () => switchTab(tabStats, statsSection));
+
+
+            // === DATE RESTRICTION LOGIC ===
+            function getLocalTodayDate() {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            
+            const formattedToday = getLocalTodayDate();
+            
+            // Lock submission date to today
+            const dateInput = document.getElementById('date');
+            dateInput.value = formattedToday;
+            dateInput.max = formattedToday;
+            dateInput.min = formattedToday;
+
+            // History Filter logic
+            const viewDateFilter = document.getElementById('viewDateFilter');
+            viewDateFilter.max = formattedToday;
+            viewDateFilter.value = formattedToday;
+
+            // Stats Filter logic
+            const statsStartDate = document.getElementById('statsStartDate');
+            const statsEndDate = document.getElementById('statsEndDate');
+            statsEndDate.max = formattedToday;
+            statsEndDate.value = formattedToday;
+            
+            // Default stats start date to 7 days ago
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const w_yyyy = weekAgo.getFullYear();
+            const w_mm = String(weekAgo.getMonth() + 1).padStart(2, '0');
+            const w_dd = String(weekAgo.getDate()).padStart(2, '0');
+            statsStartDate.value = `${w_yyyy}-${w_mm}-${w_dd}`;
+            statsStartDate.max = formattedToday;
+
+            // === VISUAL ATTENDANCE LOGIC ===
+            const attendanceBtns = document.querySelectorAll('.attendance-btn');
+            const attendanceInput = document.getElementById('attendanceStatusInput');
+            const checkInTime = document.getElementById('checkInTime');
+            const checkOutTime = document.getElementById('checkOutTime');
+
+            // Define styles for active states
+            const activeStyles = {
+                'Present': ['border-emerald-500', 'bg-emerald-50', 'text-emerald-700'],
+                'Half-Day': ['border-amber-500', 'bg-amber-50', 'text-amber-700'],
+                'Leave': ['border-blue-500', 'bg-blue-50', 'text-blue-700'],
+                'Absent': ['border-rose-500', 'bg-rose-50', 'text-rose-700']
+            };
+
+            // Default inactive style
+            const inactiveClasses = ['border-slate-200', 'bg-white', 'text-slate-600'];
+
+            attendanceBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const status = this.getAttribute('data-status');
+                    attendanceInput.value = status; // Update hidden input
+
+                    // Reset all buttons
+                    attendanceBtns.forEach(b => {
+                        b.className = `attendance-btn w-full py-2.5 rounded-lg border-2 font-bold text-xs sm:text-sm transition-all shadow-sm ${inactiveClasses.join(' ')}`;
+                    });
+
+                    // Activate clicked button
+                    this.classList.remove(...inactiveClasses);
+                    this.classList.add(...activeStyles[status]);
+
+                    // Disable/Enable time inputs
+                    if (status === 'Leave' || status === 'Absent') {
+                        checkInTime.disabled = true;
+                        checkOutTime.disabled = true;
+                        checkInTime.value = '';
+                        checkOutTime.value = '';
+                    } else {
+                        checkInTime.disabled = false;
+                        checkOutTime.disabled = false;
+                    }
+                });
+            });
+
+            // === TEAMS AND DESIGNATION LOGIC ===
+            const teamData = {
+                "Pedda Durgaiah Team": {
+                    "Pedda Durgaiah": "Project Manager/Senior Marketing Manager",
+                    "Pavan": "Marketing Executive",
+                    "Vijaya Lakshmi": "Marketing Executive",
+                    "Prasanna": "Telecaller"
+                },
+                "Madhu Team": {
+                    "Madhu": "Marketing Manager",
+                    "Sai": "Marketing Executive",
+                    "Sravani": "Marketing Executive",
+                    "Hema": "Telecaller",
+                    "Lavanya": "Telecaller"
+                },
+                "Praveen Raj Team": {
+                    "Praveen": "Marketing Manager",
+                    "Narasimha": "Marketing Executive",
+                    "Usha Rani": "Telecaller",
+                    "Hari Priya": "Telecaller"
+                }
+            };
+
+            const teamSelect = document.getElementById('teamSelect');
+            const employeeSelect = document.getElementById('employeeSelect');
+            const designationInput = document.getElementById('designationInput');
+            const targetDisplay = document.getElementById('targetCallsDisplay');
+
+            teamSelect.addEventListener('change', function() {
+                const selectedTeam = this.value;
+                const employees = teamData[selectedTeam];
+
+                employeeSelect.innerHTML = '<option value="" disabled selected>Select your name</option>';
+                designationInput.value = '';
+                targetDisplay.classList.add('hidden');
+                employeeSelect.disabled = false;
+
+                for (const employeeName in employees) {
+                    const option = document.createElement('option');
+                    option.value = employeeName;
+                    option.textContent = employeeName;
+                    employeeSelect.appendChild(option);
+                }
+            });
+
+            employeeSelect.addEventListener('change', function() {
+                const selectedTeam = teamSelect.value;
+                const selectedEmployee = this.value;
+                
+                if (selectedTeam && selectedEmployee) {
+                    const designation = teamData[selectedTeam][selectedEmployee];
+                    designationInput.value = designation;
+
+                    // TARGET CALLS DISPLAY
+                    let minCalls = 0;
+                    const lowerDesignation = designation.toLowerCase();
+                    if (lowerDesignation.includes('telecaller')) minCalls = 80;
+                    else if (lowerDesignation.includes('manager')) minCalls = 50;
+                    else if (lowerDesignation.includes('executive')) minCalls = 40;
+                    
+                    if (minCalls > 0) {
+                        targetDisplay.textContent = `Min: ${minCalls}`;
+                        targetDisplay.classList.remove('hidden');
+                    } else {
+                        targetDisplay.classList.add('hidden');
+                    }
+                }
+            });
+
+            // === LOCATION TRACKING LOGIC ===
+            const getLocationBtn = document.getElementById('getLocationBtn');
+            const locationBtnText = document.getElementById('locationBtnText');
+            const latitudeInput = document.getElementById('latitude');
+            const longitudeInput = document.getElementById('longitude');
+            const areaNameInput = document.getElementById('areaName');
+            const locationError = document.getElementById('locationError');
+
+            getLocationBtn.addEventListener('click', () => {
+                locationError.classList.add('hidden');
+                
+                if (navigator.geolocation) {
+                    locationBtnText.textContent = "Locating...";
+                    areaNameInput.value = "";
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            latitudeInput.value = lat;
+                            longitudeInput.value = lon;
+                            
+                            locationBtnText.textContent = "Captured";
+                            getLocationBtn.classList.replace('text-indigo-600', 'text-emerald-600');
+                            getLocationBtn.classList.replace('border-indigo-500', 'border-emerald-500');
+
+                            areaNameInput.value = "Fetching area details...";
+                            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    areaNameInput.value = (data && data.display_name) ? data.display_name : "Area not found";
+                                })
+                                .catch(() => {
+                                    areaNameInput.value = "Error fetching area name";
+                                });
+                        },
+                        (error) => {
+                            locationError.textContent = "Location access denied or failed.";
+                            locationError.classList.remove('hidden');
+                            locationBtnText.textContent = "Try Again";
+                            areaNameInput.value = "";
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                } else {
+                    locationError.textContent = "Geolocation is not supported.";
+                    locationError.classList.remove('hidden');
+                }
+            });
+
+            // === FORM SUBMISSION LOGIC ===
+            const form = document.getElementById('dutyForm');
+            const toast = document.getElementById('toast');
+
+            function showToast(message, type = 'success') {
+                const toastIcon = document.getElementById('toast-icon-container');
+                document.getElementById('toast-message').textContent = message;
+
+                if (type === 'error') {
+                    toastIcon.innerHTML = '<i data-lucide="alert-circle" class="w-6 h-6 text-rose-400"></i>';
+                } else {
+                    toastIcon.innerHTML = '<i data-lucide="check-circle" class="w-6 h-6 text-emerald-400"></i>';
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                // Show
+                toast.classList.remove('-translate-y-full', 'sm:translate-y-full', 'opacity-0');
+                
+                // Hide after 4s
+                setTimeout(() => {
+                    toast.classList.add('-translate-y-full', 'sm:translate-y-full', 'opacity-0');
+                }, 4000);
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // --- TARGET VALIDATION ---
+                const designation = (data.designation || "").toLowerCase();
+                const followedCalls = parseInt(data.callsFollowed) || 0;
+                let minCalls = 0;
+
+                if (designation.includes('telecaller')) minCalls = 80;
+                else if (designation.includes('manager')) minCalls = 50;
+                else if (designation.includes('executive')) minCalls = 40;
+
+                let isTargetMissed = (minCalls > 0 && followedCalls < minCalls);
+                data.targetMet = !isTargetMissed;
+                data.targetRequired = minCalls;
+                data.timestamp = new Date().toISOString();
+
+                // Save to LocalStorage
+                let existingReports = JSON.parse(localStorage.getItem('jk_reports') || '[]');
+                existingReports.push(data);
+                localStorage.setItem('jk_reports', JSON.stringify(existingReports));
+
+                // Notification
+                if (isTargetMissed) {
+                    showToast(`Report saved! (Target of ${minCalls} missed)`, "error");
+                } else {
+                    showToast("Report saved successfully!", "success");
+                }
+                
+                // Form Reset Cleanup
+                form.reset();
+                dateInput.value = formattedToday;
+                employeeSelect.innerHTML = '<option value="" disabled selected>Select team first</option>';
+                employeeSelect.disabled = true;
+                targetDisplay.classList.add('hidden');
+                
+                // Reset Attendance Visuals
+                document.querySelector('[data-status="Present"]').click();
+
+                // Reset Location Visuals
+                locationBtnText.textContent = "Capture Location";
+                getLocationBtn.classList.replace('text-emerald-600', 'text-indigo-600');
+                getLocationBtn.classList.replace('border-emerald-500', 'border-indigo-500');
+                locationError.classList.add('hidden');
+                areaNameInput.value = "";
+            });
+
+            // === HISTORY VIEW LOGIC ===
+            const fetchReportsBtn = document.getElementById('fetchReportsBtn');
+            const reportsContainer = document.getElementById('reportsContainer');
+
+            fetchReportsBtn.addEventListener('click', () => {
+                const selectedDate = viewDateFilter.value;
+                const allReports = JSON.parse(localStorage.getItem('jk_reports') || '[]');
+                const filteredReports = allReports.filter(r => r.date === selectedDate);
+
+                if (filteredReports.length === 0) {
+                    reportsContainer.innerHTML = `
+                        <div class="text-center py-16 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 fade-in">
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                                <i data-lucide="folder-search" class="w-8 h-8 text-slate-300"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-600">No Reports Found</h3>
+                            <p class="text-xs text-slate-400 mt-1">No staff duty reports were found for ${selectedDate}.</p>
+                        </div>`;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    return;
+                }
+
+                reportsContainer.innerHTML = '';
+                filteredReports.forEach(report => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm fade-in";
+                    
+                    let attColor = "bg-slate-100 text-slate-800";
+                    if(report.attendanceStatus === "Present") attColor = "bg-emerald-100 text-emerald-800";
+                    if(report.attendanceStatus === "Half-Day") attColor = "bg-amber-100 text-amber-800";
+                    if(report.attendanceStatus === "Absent") attColor = "bg-rose-100 text-rose-800";
+                    if(report.attendanceStatus === "Leave") attColor = "bg-blue-100 text-blue-800";
+
+                    const targetBadge = report.targetMet === false 
+                        ? `<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded ml-2">Target Missed</span>`
+                        : `<span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded ml-2">Target Met</span>`;
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    ${report.employeeName}
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-md ${attColor}">${report.attendanceStatus}</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 font-medium">${report.team} &bull; ${report.designation}</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                            <div><span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Followed</span> <strong class="text-slate-700">${report.callsFollowed}</strong> ${report.targetRequired > 0 ? targetBadge : ''}</div>
+                            <div><span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Interested</span> <strong class="text-slate-700">${report.callsInterested}</strong></div>
+                            <div><span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Collected</span> <strong class="text-slate-700">${report.callsCollected}</strong></div>
+                            <div><span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Visits</span> <strong class="text-slate-700">${report.visits}</strong></div>
+                        </div>
+                        ${report.areaName ? `<p class="text-xs text-slate-500 mb-3 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i> ${report.areaName}</p>` : ''}
+                        <div class="text-sm text-slate-600 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                            <strong>Remarks:</strong> ${report.remarks || '<span class="italic text-slate-400">No remarks</span>'}
+                        </div>
+                    `;
+                    reportsContainer.appendChild(card);
+                });
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+
+            // === STATISTICS DASHBOARD LOGIC ===
+            const generateStatsBtn = document.getElementById('generateStatsBtn');
+            const statsContent = document.getElementById('statsContent');
+            const statsEmpty = document.getElementById('statsEmpty');
+            let callsChartInstance = null;
+            let attendanceChartInstance = null;
+
+            generateStatsBtn.addEventListener('click', () => {
+                const start = statsStartDate.value;
+                const end = statsEndDate.value;
+                
+                if(!start || !end || start > end) {
+                    alert("Please select a valid date range.");
+                    return;
+                }
+
+                const allReports = JSON.parse(localStorage.getItem('jk_reports') || '[]');
+                const filtered = allReports.filter(r => r.date >= start && r.date <= end);
+
+                let totals = { followed: 0, interested: 0, collected: 0, visits: 0 };
+                let attendance = { Present: 0, "Half-Day": 0, Leave: 0, Absent: 0 };
+
+                filtered.forEach(r => {
+                    totals.followed += parseInt(r.callsFollowed) || 0;
+                    totals.interested += parseInt(r.callsInterested) || 0;
+                    totals.collected += parseInt(r.callsCollected) || 0;
+                    totals.visits += parseInt(r.visits) || 0;
+                    if(attendance[r.attendanceStatus] !== undefined) attendance[r.attendanceStatus]++;
+                });
+
+                // Update text
+                document.getElementById('statFollowed').textContent = totals.followed;
+                document.getElementById('statInterested').textContent = totals.interested;
+                document.getElementById('statCollected').textContent = totals.collected;
+                document.getElementById('statVisits').textContent = totals.visits;
+
+                statsEmpty.classList.add('hidden');
+                statsContent.classList.remove('hidden');
+
+                // Render Charts
+                if(callsChartInstance) callsChartInstance.destroy();
+                if(attendanceChartInstance) attendanceChartInstance.destroy();
+
+                const ctxCalls = document.getElementById('callsChart').getContext('2d');
+                callsChartInstance = new Chart(ctxCalls, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Followed', 'Interested', 'Collected', 'Visits'],
+                        datasets: [{
+                            data: [totals.followed, totals.interested, totals.collected, totals.visits],
+                            backgroundColor: ['#3b82f6', '#10b981', '#a855f7', '#f43f5e'],
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: { 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+
+                const ctxAtt = document.getElementById('attendanceChart').getContext('2d');
+                attendanceChartInstance = new Chart(ctxAtt, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Present', 'Half-Day', 'Leave', 'Absent'],
+                        datasets: [{
+                            data: [attendance.Present, attendance["Half-Day"], attendance.Leave, attendance.Absent],
+                            backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#f43f5e'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { maintainAspectRatio: false, cutout: '70%' }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
